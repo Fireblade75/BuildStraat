@@ -1,0 +1,48 @@
+# https://github.com/compose-spec/compose-spec/blob/master/spec.md
+
+version: "3.9"
+services:
+  jenkins:
+    build: ./jenkins-mvn
+    ports:
+      - "8080:8080"
+    networks:
+      - sonarnet
+  sonarqube:
+    image: sonarqube:8.8-community
+    depends_on:
+      - db
+    # stop_grace_period: 3600ms
+    ports:
+      - "9000:9000"
+    networks:
+      - sonarnet
+    environment:
+      SONAR_JDBC_URL: jdbc:postgresql://db:5432/sonar
+      SONAR_JDBC_USERNAME: sonar
+      SONAR_JDBC_PASSWORD: sonar
+  db:
+    image: postgres
+    networks:
+      - sonarnet
+    environment:
+      POSTGRES_USER: sonar
+      POSTGRES_PASSWORD: sonar
+    volumes:
+      - postgresql:/var/lib/postgresql
+      - postgresql_data:/var/lib/postgresql/data
+networks:
+  sonarnet:
+    driver: bridge
+volumes:
+  sonarqube_data:
+  sonarqube_extensions:
+  sonarqube_logs:
+  sonarqube_temp:
+  postgresql:
+  postgresql_data:
+
+
+# sonarqube [1]: max virtual memory areas vm.max_map_count [65530] is too low, increase to at least [262144]
+# wsl -d docker-desktop
+# sysctl -w vm.max_map_count=262144
